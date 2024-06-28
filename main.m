@@ -42,7 +42,7 @@ endfor
 % INICIALIZANDO MATRIZES DO ITEM 4 (FIM) -----------
 
 % Dê um número entre 1 e 80
-%while true
+function escolha = escolher(matriz, vet)
   
   indice = input("Digite um inteiro de 1 a 80: ");
   if (isscalar(indice) && isnumeric(indice)
@@ -127,4 +127,4 @@ endfor
   else
   error("ERR0");
   endif
-%endwhile
+endfunction
