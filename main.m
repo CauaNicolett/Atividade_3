@@ -44,87 +44,139 @@ endfor
 % Dê um número entre 1 e 80
 function escolha = escolher(matriz, vet)
   
-  indice = input("Digite um inteiro de 1 a 80: ");
-  if (isscalar(indice) && isnumeric(indice)
-    && indice <= 80 && indice >= 1 && mod(indice, 1) == 0)
-    
-    % Definindo a matriz
-    A = matriz.(strcat('A', num2str(indice)));
+  while true
+    indice = input("Digite um número de 1 a 80: ")
+    switch indice
+      case -1
+        break
+      case -2
+        while true
+          indice = input("Entrada: ")
+          switch indice
+            case -1
+              break;
+            case 1
+              disp("Matriz:")
+              matriz.(strcat('A', num2str(indice)))
+              fprintf("DImensões: %d x %d", m, n);
+            case 2
+              disp("Tabela comparativa de resíduos (quadrados mínimos)\n");
+              tabela_comparativa
+              disp("Tabela comparativa de resíduos (solução de norma mínima)\n");
+              tabela_comparativamin
+          endswitch
+        endwhile
+      otherwise
+        if (isscalar(indice) && isnumeric(indice)
+        && indice <= 80 && indice >= 1 && mod(indice, 1) == 0)
+        
+        % Definindo a matriz
+        A = matriz.(strcat('A', num2str(indice)));
 
-    % Definindo o tamanho n
-    m = size(A)(1);
+        % Conseguindo os tamanhos m, n
+        m = size(A)(1);
+        n = size(A)(2);
 
-    % ITEM 2 -------------------------------------
-    % Definindo um vetor b aleatório de tamanho n com entradas entre -1 e 1:
-    b = 1 - 2*rand(m,1);
+        % ITEM 2 -------------------------------------
+        % Definindo um vetor b aleatório de tamanho n com entradas entre -1 e 1:
+        b = 1 - 2*rand(m,1);
 
-    A2 = A'*A;
-    c = A'*b;
+        A2 = A'*A;
+        c = A'*b;
 
-    % Usando LU
-    [L, U, P] = lu(A2);
-    X3 = P*c;
-    X2 = resolver_triangular(L, X3, "inferior");
-    X = resolver_triangular(U, X2, "superior");
+        % Usando LU
+        [L, U, P] = lu(A2);
+        X3 = P*c;
+        X2 = resolver_triangular(L, X3, "inferior");
+        X = resolver_triangular(U, X2, "superior");
 
-    % Usando Cholesky
-    G = chol(A2, "upper");
-    Y2 = resolver_triangular(G', c, "inferior");
-    Y = resolver_triangular(G, Y2, "superior");
+        % Usando Cholesky
+        G = chol(A2, "upper");
+        Y2 = resolver_triangular(G', c, "inferior");
+        Y = resolver_triangular(G, Y2, "superior");
 
-    % Usando QR
-    [Q, R] = qr(A);
-    numero_colunas = size(R)(2);
-    c_hat = (Q'*b)(1:numero_colunas); R_hat = R(1:numero_colunas,:);
-    Z = resolver_triangular(R_hat, c_hat, "superior");
+        % Usando QR
+        [Q, R] = qr(A);
+        numero_colunas = size(R)(2);
+        c_hat = (Q'*b)(1:numero_colunas); R_hat = R(1:numero_colunas,:);
+        Z = resolver_triangular(R_hat, c_hat, "superior");
 
-    % ITEM 3 -------------------------------------
+        % ITEM 3 -------------------------------------
 
-    % Calculando resíduos usando norma 1
-    norma_b = norma1(b);
-    residuoX = norma1(A*X - b)/norma_b;
-    residuoY = norma1(A*Y - b)/norma_b;
-    residuoZ = norma1(A*Z - b)/norma_b;
+        % Calculando resíduos usando norma 1
+        norma_b = norma1(b);
+        residuoX = norma1(A*X - b)/norma_b;
+        residuoY = norma1(A*Y - b)/norma_b;
+        residuoZ = norma1(A*Z - b)/norma_b;
 
-    % A tabela comparativa é da forma
-    % [rx-rx   rx-ry   rx-rz]
-    % [ry-rx   ry-ry   ry-rz]
-    % [rz-rx   rz-ry   rz-rz]
-    % onde rx é residuoX, ry é resíduoY e rz é residuoZ.
+        % A tabela comparativa é da forma
+        % [rx-rx   rx-ry   rx-rz]
+        % [ry-rx   ry-ry   ry-rz]
+        % [rz-rx   rz-ry   rz-rz]
+        % onde rx é residuoX, ry é resíduoY e rz é residuoZ.
 
-    residuos = [residuoX, residuoY, residuoZ];
-    tabela_comparativa = ones(3);
-    tabela_comparativa(1,:) = residuoX*tabela_comparativa(1,:) - residuos;
-    tabela_comparativa(2,:) = residuoY*tabela_comparativa(2,:) - residuos;
-    tabela_comparativa(3,:) = residuoZ*tabela_comparativa(3,:) - residuos;
+        residuos = [residuoX, residuoY, residuoZ];
+        tabela_comparativa = ones(3);
+        tabela_comparativa(1,:) = residuoX*tabela_comparativa(1,:) - residuos;
+        tabela_comparativa(2,:) = residuoY*tabela_comparativa(2,:) - residuos;
+        tabela_comparativa(3,:) = residuoZ*tabela_comparativa(3,:) - residuos;
 
-    % Atualizando A para a sua transposta
-    A = A';
-    % Atualizando a definição do vetor b
-    b = vet.(strcat('b', num2str(indice)));
+        % ITEM 4 -------------------------------------
 
-    % Instruções:
-    % vet.l1 é o vetor lambda* gerado para a matriz matriz.AT1;
-    % vet.x1 é o produto da transposta de matriz.AT1 por lambda;
-    % vet.b1 é o produto de matriz.AT1 por vet.x1;
-    % Você pode usar números de 1 a 80.
+        % Atualizando A para a sua transposta
+        A = A';
+        % Atualizando a definição do vetor b
+        b = vet.(strcat('b', num2str(indice)));
 
-    % Agora basta resolver o problema de minimização
-    % Não confundir lambda* gerado aleatoriamente com o
-    % lambda do método de multiplicadores de Lagrange.
+        % Instruções:
+        % vet.l1 é o vetor lambda* gerado para a matriz matriz.AT1;
+        % vet.x1 é o produto da transposta de matriz.AT1 por lambda;
+        % vet.b1 é o produto de matriz.AT1 por vet.x1;
+        % Você pode usar números de 1 a 80.
 
-    % Usando sistema de ponto sela (resolver A*A'*lambda = -b
-    % usando Cholesky, porque esqueci como faz gradiente conjugado
+        % Agora basta resolver o problema de minimização
+        % Não confundir lambda* gerado aleatoriamente com o
+        % lambda do método de multiplicadores de Lagrange.
 
-    G = chol(A*A', "upper");
-    aux = resolver_triangular(G', -b, "inferior");
-    lambda = resolver_triangular(G, aux, "superior");
+        % Usando sistema de ponto sela (resolver A*A'*lambda = -b
+        % usando Cholesky, porque esqueci como faz gradiente conjugado
 
-    x_min = -A'*lambda;
+        G = chol(A*A', "upper");
+        aux = resolver_triangular(G', -b, "inferior");
+        lambda = resolver_triangular(G, aux, "superior");
 
-    % Usando fatoração QR
-    escolha = A;
-  else
-  error("ERR0");
-  endif
+        x_min_ml = -A'*lambda;
+
+        % Usando fatoração QR
+        [Q,R] = qr(A');
+        numero_colunas = size(R)(2);
+        Q_hat = Q(:, 1:numero_colunas); R_hat = R(1:numero_colunas,:);
+        y = resolver_triangular(R_hat', b, "inferior");
+        x_min_qr = Q_hat*y;
+        
+        % Comparando resultados
+        [x_min_ml, x_min_qr, A \ b]
+         
+        % ITEM 5 -------------------------------------
+
+        % Calculando resíduos usando norma 1
+        norma_b = norma1(b);
+        residuoml = norma1(A*x_min_ml - b)/norma_b;
+        residuoqr = norma1(A*x_min_qr - b)/norma_b;
+
+        % A tabela comparativa é da forma
+        % [rml - rml   rml - rqr]
+        % [rqr - rml   rqr - rqr]
+        % onde rml é residuoml, rqr é resíduoqr.
+
+        residuosmin = [residuoml, residuoqr];
+        tabela_comparativamin = ones(2);
+        tabela_comparativamin(1,:) = residuoml*tabela_comparativamin(1,:) - residuosmin;
+        tabela_comparativamin(2,:) = residuoqr*tabela_comparativamin(2,:) - residuosmin;
+ 
+      else
+      disp("Erro: entrada inválida. Certifique-se de que ela é um número inteiro de 1 a 80.");
+      endif
+    endswitch
+  endwhile
 endfunction
