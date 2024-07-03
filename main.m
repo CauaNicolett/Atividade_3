@@ -45,7 +45,7 @@ endfor
 function escolha = escolher(matriz, vet)
   
   while true
-    indice = input("Digite um número de 1 a 80: ")
+    indice = input("Digite um número de 1 a 80: ");
     switch indice
       case -1
         break
@@ -56,14 +56,23 @@ function escolha = escolher(matriz, vet)
             case -1
               break;
             case 1
-              disp("Matriz:")
+              disp("Matriz:\n")
               matriz.(strcat('A', num2str(indice)))
-              fprintf("DImensões: %d x %d", m, n);
+              fprintf("Dimensões: %d x %d.\n", m, n);
             case 2
               disp("Tabela comparativa de resíduos (quadrados mínimos)\n");
               tabela_comparativa
+              disp("Tempos.\n");
+              tempos1
+            case 3
               disp("Tabela comparativa de resíduos (solução de norma mínima)\n");
               tabela_comparativamin
+              disp("Tempos.\n");
+              tempos2
+              disp("Razões na solução de norma mínima, usando multiplicadores de Lagrange e fatoração QR, respectivamente.\n");
+              razoes
+              disp("Erros na solução de norma mínima, usando multiplicadores de Lagrange e fatoração QR, respectivamente.\n");
+              erros
           endswitch
         endwhile
       otherwise
@@ -85,29 +94,60 @@ function escolha = escolher(matriz, vet)
         c = A'*b;
 
         % Usando LU
+        
+        tic;
+        
         [L, U, P] = lu(A2);
+        
+        pretempolu = toc;
+        tic;
+        
         X3 = P*c;
         X2 = resolver_triangular(L, X3, "inferior");
         X = resolver_triangular(U, X2, "superior");
+      
+        tempolu = toc;
 
         % Usando Cholesky
+        
+        tic;
+        
         G = chol(A2, "upper");
+        
+        pretempochol = toc;
+        tic;
+        
         Y2 = resolver_triangular(G', c, "inferior");
         Y = resolver_triangular(G, Y2, "superior");
+        
+        tempochol = toc;
 
         % Usando QR
+        
+        tic;
+        
         [Q, R] = qr(A);
+        
+        pretempoqr = toc;
+        tic;
+        
         numero_colunas = size(R)(2);
         c_hat = (Q'*b)(1:numero_colunas); R_hat = R(1:numero_colunas,:);
         Z = resolver_triangular(R_hat, c_hat, "superior");
+        
+        tempoqr = toc;
+        
+        tempos1 = [pretempolu, pretempochol, pretempoqr;
+                  tempolu, tempochol, tempoqr
+                  pretempolu+tempolu, pretempochol+tempochol, pretempoqr+tempoqr];
 
         % ITEM 3 -------------------------------------
 
-        % Calculando resíduos usando norma 1
-        norma_b = norma1(b);
-        residuoX = norma1(A*X - b)/norma_b;
-        residuoY = norma1(A*Y - b)/norma_b;
-        residuoZ = norma1(A*Z - b)/norma_b;
+        % Calculando resíduos usando norma 2
+        norma_b = norm(b);
+        residuoX = norm(A*X - b)/norma_b;
+        residuoY = norm(A*Y - b)/norma_b;
+        residuoZ = norm(A*Z - b)/norma_b;
 
         % A tabela comparativa é da forma
         % [rx-rx   rx-ry   rx-rz]
@@ -120,7 +160,7 @@ function escolha = escolher(matriz, vet)
         tabela_comparativa(1,:) = residuoX*tabela_comparativa(1,:) - residuos;
         tabela_comparativa(2,:) = residuoY*tabela_comparativa(2,:) - residuos;
         tabela_comparativa(3,:) = residuoZ*tabela_comparativa(3,:) - residuos;
-
+        
         % ITEM 4 -------------------------------------
 
         % Atualizando A para a sua transposta
@@ -140,29 +180,50 @@ function escolha = escolher(matriz, vet)
 
         % Usando sistema de ponto sela (resolver A*A'*lambda = -b
         % usando Cholesky, porque esqueci como faz gradiente conjugado
+        
+        tic;
 
         G = chol(A*A', "upper");
+        
+        pretempo2ml = toc;
+        tic;
+        
         aux = resolver_triangular(G', -b, "inferior");
         lambda = resolver_triangular(G, aux, "superior");
 
         x_min_ml = -A'*lambda;
+        
+        tempo2ml = toc;
 
         % Usando fatoração QR
+        
+        tic;
+        
         [Q,R] = qr(A');
+        
+        pretempo2qr = toc;
+        tic;
+        
         numero_colunas = size(R)(2);
         Q_hat = Q(:, 1:numero_colunas); R_hat = R(1:numero_colunas,:);
         y = resolver_triangular(R_hat', b, "inferior");
         x_min_qr = Q_hat*y;
         
+        tempo2qr = toc;
+        
+        tempos2 = [pretempo2ml, pretempo2qr;
+                  tempo2ml, tempo2qr;
+                  pretempo2ml + tempo2ml, pretempo2qr + tempo2qr];
+        
         % Comparando resultados
-        [x_min_ml, x_min_qr, A \ b]
+        % [x_min_ml, x_min_qr, A \ b]
          
         % ITEM 5 -------------------------------------
 
-        % Calculando resíduos usando norma 1
-        norma_b = norma1(b);
-        residuoml = norma1(A*x_min_ml - b)/norma_b;
-        residuoqr = norma1(A*x_min_qr - b)/norma_b;
+        % Calculando resíduos usando norma 2
+        norma_b = norm(b);
+        residuoml = norm(A*x_min_ml - b)/norma_b;
+        residuoqr = norm(A*x_min_qr - b)/norma_b;
 
         % A tabela comparativa é da forma
         % [rml - rml   rml - rqr]
@@ -173,6 +234,23 @@ function escolha = escolher(matriz, vet)
         tabela_comparativamin = ones(2);
         tabela_comparativamin(1,:) = residuoml*tabela_comparativamin(1,:) - residuosmin;
         tabela_comparativamin(2,:) = residuoqr*tabela_comparativamin(2,:) - residuosmin;
+        
+        % Calculando erros
+        
+        % Solução exata
+        x_exato = vet.(strcat('x', num2str(indice)));
+        
+        % Razão entre soluções
+        razaoml = norm(x_min_ml)/norm(x_exato);
+        razaoqr = norm(x_min_qr)/norm(x_exato);
+        
+        razoes = [razaoml, razaoqr];
+        
+        % Erro entre soluções
+        erroml = norm(x_exato - x_min_ml)/norm(x_exato);
+        erroqr = norm(x_exato - x_min_qr)/norm(x_exato);
+        
+        erros = [erroml, erroqr];
  
       else
       disp("Erro: entrada inválida. Certifique-se de que ela é um número inteiro de 1 a 80.");
