@@ -44,16 +44,37 @@ endfor
 % Dê um número entre 1 e 80
 function escolha = escolher(matriz, vet)
   
+  exp = 1;
+  exptxt = "ATIVADO";
+  casosteste = 1000; casos = casosteste;
   while true
+    fprintf("Instruções: Digite 0 para sair do programa, ou -1 para acessar os resultados calculados.\n");
+    fprintf("Modo experimento: %s. Digite -2 para mudar o estado desta variável.\n", exptxt);
     indice = input("Digite um número de 1 a 80: ");
     switch indice
-      case -1
+      case 0
         break
       case -2
+        switch exp
+          case 1
+            exp = 0;
+            exptxt = "DESATIVADO";
+            casos = 1;
+          case 0
+            exp = 1;
+            exptxt = "ATIVADO";
+            casos = casosteste;
+        endswitch
+      case -1
         while true
+          fprintf("Entradas:\n");
+          fprintf("0 - Inserir uma nova matriz;\n");
+          fprintf("1 - Imprimir matriz;\n");
+          fprintf("2 - Exibir resultados do pŕoblema de quadrados mínimos;\n");
+          fprintf("3 - Exibir resultados do problema de solução de norma mínima.\n");
           indice = input("Entrada: ")
           switch indice
-            case -1
+            case 0
               break;
             case 1
               disp("Matriz:\n")
@@ -97,45 +118,56 @@ function escolha = escolher(matriz, vet)
         
         tic;
         
-        [L, U, P] = lu(A2);
-        
-        pretempolu = toc;
+        for i = 1:casos
+          [L, U, P] = lu(A2);
+        endfor
+      
+        pretempolu = toc/casos;
         tic;
         
-        X3 = P*c;
-        X2 = resolver_triangular(L, X3, "inferior");
-        X = resolver_triangular(U, X2, "superior");
-      
-        tempolu = toc;
+        for i = 1:casos
+          X3 = P*c;
+          X2 = resolver_triangular(L, X3, "inferior");
+          X = resolver_triangular(U, X2, "superior");
+        endfor
+        
+        tempolu = toc/casos;
 
         % Usando Cholesky
         
         tic;
         
-        G = chol(A2, "upper");
+        for i = 1:casos
+          G = chol(A2, "upper");
+        endfor
         
-        pretempochol = toc;
+        pretempochol = toc/casos;
         tic;
         
-        Y2 = resolver_triangular(G', c, "inferior");
-        Y = resolver_triangular(G, Y2, "superior");
+        for i = 1:casos
+          Y2 = resolver_triangular(G', c, "inferior");
+          Y = resolver_triangular(G, Y2, "superior");
+        endfor
         
-        tempochol = toc;
+        tempochol = toc/casos;
 
         % Usando QR
         
         tic;
         
-        [Q, R] = qr(A);
-        
-        pretempoqr = toc;
+        for i = 1:casos
+          [Q, R] = qr(A);
+        endfor
+        pretempoqr = toc/casos;
         tic;
         
-        numero_colunas = size(R)(2);
-        c_hat = (Q'*b)(1:numero_colunas); R_hat = R(1:numero_colunas,:);
-        Z = resolver_triangular(R_hat, c_hat, "superior");
+        for i = 1:casos
+          numero_colunas = size(R)(2);
+          c_hat = (Q'*b)(1:numero_colunas); R_hat = R(1:numero_colunas,:);
+          Z = resolver_triangular(R_hat, c_hat, "superior");
+        endfor
         
-        tempoqr = toc;
+        tempoqr = toc/casos;
         
         tempos1 = [pretempolu, pretempochol, pretempoqr;
                   tempolu, tempochol, tempoqr
@@ -182,34 +214,42 @@ function escolha = escolher(matriz, vet)
         % usando Cholesky, porque esqueci como faz gradiente conjugado
         
         tic;
-
-        G = chol(A*A', "upper");
         
-        pretempo2ml = toc;
+        for i = 1:casos
+          G = chol(A*A', "upper");
+        endfor
+        
+        pretempo2ml = toc/casos;
         tic;
         
-        aux = resolver_triangular(G', -b, "inferior");
-        lambda = resolver_triangular(G, aux, "superior");
+        for i = 1:casos
+          aux = resolver_triangular(G', -b, "inferior");
+          lambda = resolver_triangular(G, aux, "superior");
 
-        x_min_ml = -A'*lambda;
+          x_min_ml = -A'*lambda;
+        endfor
         
-        tempo2ml = toc;
+        tempo2ml = toc/casos;
 
         % Usando fatoração QR
         
         tic;
         
-        [Q,R] = qr(A');
+        for i = 1:casos
+          [Q,R] = qr(A');
+        endfor
         
-        pretempo2qr = toc;
+        pretempo2qr = toc/casos;
         tic;
         
-        numero_colunas = size(R)(2);
-        Q_hat = Q(:, 1:numero_colunas); R_hat = R(1:numero_colunas,:);
-        y = resolver_triangular(R_hat', b, "inferior");
-        x_min_qr = Q_hat*y;
+        for i = 1:casos
+          numero_colunas = size(R)(2);
+          Q_hat = Q(:, 1:numero_colunas); R_hat = R(1:numero_colunas,:);
+          y = resolver_triangular(R_hat', b, "inferior");
+          x_min_qr = Q_hat*y;
+        endfor
         
-        tempo2qr = toc;
+        tempo2qr = toc/casos;
         
         tempos2 = [pretempo2ml, pretempo2qr;
                   tempo2ml, tempo2qr;
